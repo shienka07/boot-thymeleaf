@@ -1,12 +1,16 @@
 package org.example.bootthymeleaf.controller;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.example.bootthymeleaf.model.dto.UpdateWordForm;
 import org.example.bootthymeleaf.model.dto.WordForm;
 import org.example.bootthymeleaf.model.entity.Word;
 import org.example.bootthymeleaf.model.repository.WordRepository;
+import org.springframework.jdbc.object.UpdatableSqlQuery;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -54,6 +58,22 @@ public class MainController {
         Word word = new Word();
         word.setText(wordForm.getWord());
         wordRepository.save(word);
+        return "redirect:/";
+    }
+
+    @PostMapping("/update")
+    @Transactional
+    public String updateWord(@ModelAttribute UpdateWordForm form, RedirectAttributes redirectAttributes) {
+        // JPA는 업데이트용 메서드나 기능이 따로 없다
+        // JPA는 수정용이 따로 없다
+        // -> 교체 개념임
+//        Word word = new Word();
+//        word.setText(form.getNewWord());
+//        word.setUuid(form.getUuid());
+        Word oldWord = wordRepository.findById(form.getUuid()).orElseThrow();
+        oldWord.setText(form.getNewWord());
+        wordRepository.save(oldWord);
+        redirectAttributes.addFlashAttribute("message", "정상적으로 교체되었습니다 %s".formatted(oldWord.getUuid()));
         return "redirect:/";
     }
 
