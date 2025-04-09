@@ -21,6 +21,10 @@
             <li th:each="word : ${words}">
                 <span th:text="${word.getText()}"></span>
                 <span th:text="${word.getCreatedAt()}"></span>
+                <form th:action="@{/delete}" method="post">
+                    <input hidden="hidden" name="id" th:value="${word.getUuid()}"/>
+                    <button>삭제</button>
+                </form>
             </li>
         </ul>
     </section>
