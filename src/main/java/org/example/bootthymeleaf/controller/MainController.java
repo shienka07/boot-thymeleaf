@@ -58,6 +58,7 @@ public class MainController {
         Word word = new Word();
         word.setText(wordForm.getWord());
         wordRepository.save(word);
+        redirectAttributes.addFlashAttribute("updateStats", true);
         return "redirect:/";
     }
 

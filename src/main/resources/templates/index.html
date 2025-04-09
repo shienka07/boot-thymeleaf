@@ -1,47 +1,224 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Hello World!</title>
+    <title>끝말잇기 게임</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <p th:text="${message}"></p>
-    <form th:action="@{/reset}" method="post">
-        <button>리셋하기</button>
-    </form>
-    <h1>끝말잇기 하자!</h1>
-    <form method="post" th:action="@{/word}" th:object="${wordForm}">
-        <label>단어:
-            <input type="text" th:field="*{word}"/>
-        </label>
-        <button>제출</button>
-    </form>
-    <section>
-        <ul>
-<!--            <li th:each="word : ${words}" th:text="${word}"></li>-->
-            <li th:each="word, iterStat : ${words}">
-                <span th:text="${word.getText()}"></span>
-                <span th:text="${word.getCreatedAt()}"></span>
-                <p th:if="${iterStat.last}">Race Start~</p>
-                <p th:if="${!iterStat.last}">
-<!--                    <span th:text="${#strings.substring(word.getText(), 0, 1)}"></span>-->
-<!--                    <span th:text="${words[iterStat.index + 1].getText()}"></span>-->
-<!--                    <span th:text="${#strings.substring(words[iterStat.index + 1].getText(), -1, 1)}"></span>-->
-                    <span th:if="${#strings.substring(word.getText(), 0, 1).equals(#strings.substring(words[iterStat.index + 1].getText(), words[iterStat.index + 1].getText().length() - 1, words[iterStat.index + 1].getText().length()))}">성공!</span>
-                </p>
-                <form th:action="@{/update}" method="post">
-                    <input type="hidden" th:name="uuid" th:value="${word.getUuid()}" />
-                    <label>
-                        수정 :
-                        <input type="text" th:name="newWord"/>
-                    </label>
-                    <button>수정</button>
-                </form>
-                <form th:action="@{/delete}" method="post">
-                    <input hidden="hidden" name="id" th:value="${word.getUuid()}"/>
-                    <button>삭제</button>
-                </form>
-            </li>
-        </ul>
-    </section>
+<!-- 로딩 인디케이터 -->
+<div id="loading" class="loading" style="display: none;">
+    <div class="spinner"></div>
+</div>
+
+<!-- 알림 메시지 -->
+<div class="alert-container" th:if="${message}">
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${message}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
+<!-- 헤더 -->
+<header class="game-header text-center">
+    <div class="container">
+        <h1 class="display-4">🎮 끝말잇기 게임</h1>
+        <p class="lead">앞 단어의 마지막 글자로 시작하는 단어를 입력하세요!</p>
+
+        <!-- 다크모드 토글 -->
+        <div class="form-check form-switch position-absolute top-0 end-0 mt-3 me-3">
+            <input class="form-check-input" type="checkbox" id="dark-mode-toggle">
+            <label class="form-check-label text-white" for="dark-mode-toggle">
+                <i class="bi bi-moon-stars"></i> 다크 모드
+            </label>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <!-- 통계 패널 -->
+    <div class="stats-panel mb-4" th:if="${not #lists.isEmpty(words)}">
+        <h4 class="text-center mb-3">📊 게임 통계</h4>
+        <div class="row">
+            <div class="col-md-4 col-6 stats-item">
+                <div class="stats-icon"><i class="bi bi-list-ol"></i></div>
+                <div class="stats-value" id="total-words">0</div>
+                <div class="stats-label">총 단어 수</div>
+            </div>
+            <div class="col-md-4 col-6 stats-item">
+                <div class="stats-icon"><i class="bi bi-check-circle"></i></div>
+                <div class="stats-value" id="successful-connections">0</div>
+                <div class="stats-label">성공한 연결 수</div>
+            </div>
+            <div class="col-md-4 col-12 stats-item">
+                <div class="stats-icon"><i class="bi bi-lightning-charge"></i></div>
+                <div class="stats-value" id="current-streak">0</div>
+                <div class="stats-label">현재 연속 성공</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 리셋 버튼 -->
+    <div class="d-flex justify-content-end mb-3">
+        <form th:action="@{/reset}" method="post">
+            <button class="btn btn-outline-danger">
+                <i class="bi bi-arrow-repeat"></i> 게임 리셋
+            </button>
+        </form>
+    </div>
+
+    <!-- 입력 폼 -->
+    <div class="form-container">
+        <form method="post" th:action="@{/word}" th:object="${wordForm}" class="row g-3">
+            <div class="col-md-9">
+                <label for="word" class="form-label">새로운 단어:</label>
+                <input type="text" th:field="*{word}" class="form-control form-control-lg" id="word"
+                       placeholder="한글 단어를 입력하세요 (최대 3글자)" maxlength="3" required
+                       oninput="previewWord()">
+
+                <!-- 단어 미리보기 -->
+                <div id="word-preview" class="mt-2"></div>
+
+                <!-- 입력 힌트 -->
+                <div id="hint-container" class="hint-container"></div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-primary btn-lg w-100">
+                    <i class="bi bi-plus-circle"></i> 단어 추가
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 단어 목록 -->
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4"><i class="bi bi-list-ul"></i> 단어 목록</h3>
+
+            <div th:if="${#lists.isEmpty(words)}" class="text-center py-5">
+                <p class="text-muted">아직 등록된 단어가 없습니다. 첫 단어를 입력해 보세요!</p>
+                <i class="bi bi-emoji-smile display-1 text-muted"></i>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(words)}" class="word-list">
+                <div th:each="word, iterStat : ${words}" class="word-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <!-- 단어와 글자 표시 -->
+                            <span class="word-text" th:text="${word.getText()}"></span>
+
+                            <!-- 단어 첫글자와 끝글자 표시 -->
+                            <div class="mt-2">
+                                <span class="first-char" th:text="${#strings.substring(word.getText(), 0, 1)}"></span>
+                                <i class="bi bi-arrow-right mx-2"></i>
+                                <span class="last-char" th:text="${#strings.substring(word.getText(), word.getText().length() - 1, word.getText().length())}"></span>
+                            </div>
+
+                            <!-- 성공/시작 표시 -->
+                            <div class="mt-2">
+                                    <span th:if="${iterStat.last}" class="badge bg-primary">
+                                        <i class="bi bi-flag-fill"></i> 게임 시작
+                                    </span>
+                                <span th:if="${!iterStat.last && #strings.substring(word.getText(), 0, 1).equals(#strings.substring(words[iterStat.index + 1].getText(), words[iterStat.index + 1].getText().length() - 1, words[iterStat.index + 1].getText().length()))}"
+                                      class="success-badge">
+                                        <i class="bi bi-check-circle-fill"></i> 연결 성공!
+                                    </span>
+                            </div>
+
+                            <!-- 타임스탬프 -->
+                            <small class="timestamp d-block mt-2">
+                                <i class="bi bi-clock"></i>
+                                <span th:text="${#temporals.format(word.getCreatedAt(), 'yyyy-MM-dd HH:mm:ss')}"></span>
+                            </small>
+                        </div>
+
+                        <!-- 수정 및 삭제 버튼 -->
+                        <div class="actions-row">
+                            <!-- 수정 폼 - 버튼 클릭 시 모달 표시 -->
+                            <button type="button" class="btn btn-warning btn-sm me-1" data-bs-toggle="modal" th:data-bs-target="'#editModal-' + ${word.getUuid()}">
+                                <i class="bi bi-pencil-fill"></i> 수정
+                            </button>
+
+                            <!-- 삭제 버튼 -->
+                            <form th:action="@{/delete}" method="post" class="d-inline">
+                                <input type="hidden" name="id" th:value="${word.getUuid()}"/>
+                                <button class="btn btn-danger btn-sm" onclick="return confirm('정말 삭제하시겠습니까?')">
+                                    <i class="bi bi-trash-fill"></i> 삭제
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게임 설명 -->
+    <div class="card mt-4 mb-5">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> 게임 방법</h5>
+        </div>
+        <div class="card-body">
+            <p>끝말잇기는 앞 사람이 말한 단어의 마지막 글자로 시작하는 단어를 말하는 게임입니다.</p>
+            <ol>
+                <li>첫 단어를 입력하세요. (최대 3글자)</li>
+                <li>이전 단어의 마지막 글자로 시작하는 새 단어를 입력하세요.</li>
+                <li>성공적으로 연결되면 "연결 성공!" 배지가 표시됩니다.</li>
+                <li>단어는 언제든지 수정하거나 삭제할 수 있습니다.</li>
+            </ol>
+            <p class="mb-0">즐거운 게임 되세요!</p>
+        </div>
+    </div>
+</div>
+
+<!-- 수정 모달 -->
+<div th:each="word, iterStat : ${words}" class="modal fade" th:id="'editModal-' + ${word.getUuid()}" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">단어 수정</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:action="@{/update}" method="post" th:id="'edit-form-' + ${iterStat.index}" onsubmit="return validateEditForm(this.id)">
+                <div class="modal-body">
+                    <input type="hidden" name="uuid" th:value="${word.getUuid()}" />
+                    <div class="mb-3">
+                        <label for="newWord" class="form-label">새 단어 (최대 3글자):</label>
+                        <input type="text" class="form-control" id="newWord" name="newWord" th:value="${word.getText()}" maxlength="3" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-dark text-white text-center py-3 mt-5">
+    <div class="container">
+        <p class="mb-0">© 2025 끝말잇기 게임 - 즐거운 한글 놀이</p>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JS -->
+<script th:src="@{/js/main.js}"></script>
+<script th:if="${updateStats}">
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateStats();
+    });
+</script>
 </body>
 </html>
