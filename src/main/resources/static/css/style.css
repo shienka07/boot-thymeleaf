@@ -287,23 +287,23 @@ body {
 .alert-container {
     position: fixed;
     top: 20px;
-    right: 20px;
+    left: 20px;
     z-index: 1000;
     min-width: 300px;
 }
 
 /* 알림 애니메이션 */
 .alert {
-    animation: slideIn 0.5s forwards, fadeOut 0.5s 4.5s forwards;
+    animation: slideInFromLeft 0.5s forwards, fadeOut 0.5s 4.5s forwards;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border: none;
     padding: 12px 20px;
 }
 
-@keyframes slideIn {
+@keyframes slideInFromLeft {
     from {
-        transform: translateX(100%);
+        transform: translateX(-100%);
         opacity: 0;
     }
     to {
@@ -562,6 +562,17 @@ body {
 footer {
     position: relative;
     overflow: hidden;
+    flex-shrink: 0; /* footer 높이 유지 */
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* viewport 높이의 100% */
+}
+
+.container {
+    flex: 1 0 auto; /* flex-grow: 1로 설정하여 남은 공간 채우기 */
 }
 
 footer::before {

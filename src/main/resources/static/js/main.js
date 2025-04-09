@@ -20,9 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 페이지 로드 시 인트로 애니메이션
     playIntroAnimation();
 
-    // 미니 게임 캐릭터 초기화
-    initializeCharacter();
-
     // 이스터 에그 초기화
     initializeEasterEggs();
 
@@ -32,16 +29,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // 반응형 레이아웃 조정
     adjustResponsiveLayout();
 
-    // 공유 기능 초기화
-    initializeSharing();
-});
-
-document.addEventListener('DOMContentLoaded', function() {
     const loadingElement = document.getElementById('loading');
     if (loadingElement) {
         loadingElement.style.display = 'none';
     }
+
+    setTimeout(calculateStats, 100);
 });
+
+// document.addEventListener('DOMContentLoaded', function() {
+//     const loadingElement = document.getElementById('loading');
+//     if (loadingElement) {
+//         loadingElement.style.display = 'none';
+//     }
+// });
 
 /**
  * 알림 메시지 초기화 및 자동 숨김 설정
@@ -171,22 +172,23 @@ function updateWordPreview(word) {
  * 단어 관련 통계 계산 및 표시
  */
 function calculateStats() {
-    const statsContainer = document.getElementById('stats-container');
+    const totalWordsElement = document.getElementById('total-words');
+    const successfulConnectionsElement = document.getElementById('successful-connections');
+    const currentStreakElement = document.getElementById('current-streak');
     const wordList = document.querySelectorAll('.word-card');
 
-    if (statsContainer && wordList.length > 0) {
+    if (totalWordsElement && successfulConnectionsElement && currentStreakElement && wordList.length > 0) {
         // 총 단어 수
         const totalWords = wordList.length;
 
-        // 성공적으로 연결된 단어 수
-        const successfulConnections = document.querySelectorAll('.success-badge').length;
+        // 성공적으로 연결된 단어 수 - 직접 success-badge 엘리먼트 수 세기
+        const successBadges = document.querySelectorAll('.success-badge');
+        const successfulConnections = successBadges.length;
 
         // 연속 성공 (현재 진행 중인)
         let currentStreak = 0;
-
         for (let i = 0; i < wordList.length - 1; i++) {
             const hasSuccessBadge = wordList[i].querySelector('.success-badge');
-
             if (hasSuccessBadge) {
                 currentStreak++;
             } else {
@@ -194,12 +196,18 @@ function calculateStats() {
             }
         }
 
-        // 통계 업데이트
+        // 간단한 값 설정으로 시작하여 확실히 값이 업데이트되도록 함
+        totalWordsElement.textContent = totalWords;
+        successfulConnectionsElement.textContent = successfulConnections;
+        currentStreakElement.textContent = currentStreak;
+
+        // 그 다음 애니메이션 적용
         animateStatChange('total-words', totalWords);
         animateStatChange('successful-connections', successfulConnections);
         animateStatChange('current-streak', currentStreak);
     }
 }
+
 
 /**
  * 통계 수치 변경 애니메이션
@@ -208,16 +216,13 @@ function animateStatChange(elementId, newValue) {
     const element = document.getElementById(elementId);
     if (!element) return;
 
-    const currentValue = element.textContent;
-
-    // 숫자만 추출
-    const currentNum = parseInt(currentValue.replace(/[^0-9]/g, '')) || 0;
+    // 현재 텍스트 내용을 숫자로 변환
+    const currentText = element.textContent;
+    const currentNum = parseInt(currentText.replace(/[^0-9]/g, '')) || 0;
     const newNum = parseInt(newValue.toString().replace(/[^0-9]/g, '')) || 0;
 
-    if (currentNum === newNum) {
-        element.textContent = newValue;
-        return;
-    }
+    // 값이 같으면 애니메이션 필요 없음
+    if (currentNum === newNum) return;
 
     // 증가 또는 감소 방향 결정
     const step = currentNum < newNum ? 1 : -1;
@@ -317,6 +322,7 @@ function initializeAnimations() {
  */
 function initializeDarkMode() {
     // 페이지 하단에 동적으로 다크 모드 토글 버튼 추가
+    /*
     if (!document.querySelector('.dark-mode-toggle-container')) {
         const container = document.createElement('div');
         container.className = 'dark-mode-toggle-container';
@@ -327,6 +333,7 @@ function initializeDarkMode() {
         `;
         document.body.appendChild(container);
     }
+    */
 
     // 토글 버튼 이벤트 리스너
     const darkModeToggle = document.getElementById('dark-mode-toggle');
@@ -668,6 +675,10 @@ function validateEditForm(formId) {
 
     return true;
 }
+
+window.onload = function() {
+    setTimeout(calculateStats, 300);
+};
 
 // 초기 로드 시 한 번 실행
 adjustResponsiveLayout();

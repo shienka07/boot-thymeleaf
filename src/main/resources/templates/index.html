@@ -217,7 +217,9 @@
 <script th:src="@{/js/main.js}"></script>
 <script th:if="${updateStats}">
     document.addEventListener('DOMContentLoaded', function() {
-        calculateStats();
+        setTimeout(function() {
+            calculateStats();
+        }, 100);
     });
 </script>
 </body>
