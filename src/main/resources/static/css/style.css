@@ -217,6 +217,36 @@ body {
     background: var(--header-gradient);
 }
 
+.form-container .form-control-lg {
+    height: 48px; /* input 높이 고정 */
+}
+
+/* 라벨과 버튼의 수직 위치 맞추기 */
+.form-container .form-label {
+    margin-bottom: 8px; /* 라벨 아래 간격 조정 */
+}
+
+.form-container .btn-lg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 입력 폼 그룹 스타일 */
+.input-group .form-control-lg,
+.input-group .btn-lg {
+    height: calc(3.5rem + 2px); /* Bootstrap large input의 표준 높이 */
+    vertical-align: middle;
+}
+
+.input-group .btn-lg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
 /* 버튼 스타일 */
 .btn {
     border-radius: 5px;
@@ -558,11 +588,10 @@ body {
     z-index: 1;
 }
 
-/* 푸터 */
-footer {
-    position: relative;
-    overflow: hidden;
-    flex-shrink: 0; /* footer 높이 유지 */
+/* 전체 페이지 구조를 위한 스타일 */
+html, body {
+    height: 100%;
+    margin: 0;
 }
 
 body {
@@ -571,8 +600,26 @@ body {
     min-height: 100vh; /* viewport 높이의 100% */
 }
 
+/* 헤더는 flex 구조에서 제외시키기 */
+.game-header {
+    flex-shrink: 0; /* 헤더 크기 유지 */
+    position: relative; /* 기존 position 속성 유지 */
+    z-index: 10; /* 헤더가 다른 요소 위에 표시되도록 z-index 추가 */
+}
+
 .container {
     flex: 1 0 auto; /* flex-grow: 1로 설정하여 남은 공간 채우기 */
+    padding-top: 20px; /* 헤더와 간격 */
+}
+
+/* 푸터 스타일 */
+footer {
+    flex-shrink: 0; /* footer 높이 유지 */
+    width: 100%;
+    background-color: #212529;
+    color: white;
+    padding: 1rem 0;
+    margin-top: auto; /* 이 부분을 추가하여 footer를 항상 하단에 배치 */
 }
 
 footer::before {
@@ -584,7 +631,6 @@ footer::before {
     height: 2px;
     background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
 }
-
 /* 다크 모드 토글 */
 .dark-mode-toggle-container {
     position: fixed;

@@ -77,23 +77,23 @@
 
     <!-- 입력 폼 -->
     <div class="form-container">
-        <form method="post" th:action="@{/word}" th:object="${wordForm}" class="row g-3">
-            <div class="col-md-9">
+        <form method="post" th:action="@{/word}" th:object="${wordForm}">
+            <div class="mb-3">
                 <label for="word" class="form-label">새로운 단어:</label>
-                <input type="text" th:field="*{word}" class="form-control form-control-lg" id="word"
-                       placeholder="한글 단어를 입력하세요 (최대 3글자)" maxlength="3" required
-                       oninput="previewWord()">
+                <div class="input-group">
+                    <input type="text" th:field="*{word}" class="form-control form-control-lg" id="word"
+                           placeholder="한글 단어를 입력하세요 (최대 3글자)" maxlength="3" required
+                           oninput="previewWord()">
+                    <button class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle"></i> 단어 추가
+                    </button>
+                </div>
 
                 <!-- 단어 미리보기 -->
                 <div id="word-preview" class="mt-2"></div>
 
                 <!-- 입력 힌트 -->
                 <div id="hint-container" class="hint-container"></div>
-            </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button class="btn btn-primary btn-lg w-100">
-                    <i class="bi bi-plus-circle"></i> 단어 추가
-                </button>
             </div>
         </form>
     </div>
